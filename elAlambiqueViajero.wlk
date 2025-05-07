@@ -175,32 +175,50 @@ object moto {
   method patenteValida() = false
 }
 
-object inscripcion {
-  const inscriptos = [maquinaMalevola, antigualla, chatarra, convertible]
+object carrera {
+  const inscriptos = []
   const rechazados = []
   var ciudad = paris
   
-  method inscribirORechazar(vehiculo) = if (ciudad.puedeLlegar(vehiculo))
-                                          inscriptos.add(vehiculo)
-                                        else rechazados.add(vehiculo)
-  
+  method inscribirORechazar(vehiculo) {
+    if (ciudad.puedeLlegar(vehiculo))
+       inscriptos.add(vehiculo)
+    else 
+       rechazados.add(vehiculo)
+  }
   method replanificacion(nuevaCiudad) {
     ciudad = nuevaCiudad
+    inscriptos.filter{a=>not ciudad.puedeLlegar(a)}.forEach({a=>
+      rechazados.add(a)
+      inscriptos.remove(a)
+    })
+    rechazados.filter{a=>ciudad.puedeLlegar(a)}.forEach({a=>
+      rechazados.remove(a)
+      inscriptos.add(a)
+    }) 
+  }
+
+  method replanificacion2(nuevaCiudad) {
+    ciudad = nuevaCiudad
+    rechazados.addAll(inscriptos)
+    inscriptos.clear()
+    inscriptos.addAll(rechazados.filter{a=>ciudad.puedeLlegar(a)})
+    rechazados.removeAll(inscriptos)
+  }
+  method replanificacion3(nuevaCiudad) {
+    ciudad = nuevaCiudad
+    const nueva = rechazados + inscriptos
     inscriptos.clear()
     rechazados.clear()
+    nueva.forEach{a=>self.inscribirORechazar(a)}
+  }
+
+  method avisarALosVehiculos() {
+    inscriptos.forEach({ i => i.desgaste() })
   }
   
-  method inscriptos() = inscriptos
-  
-  method rechazados() = rechazados
+  method ganador() = inscriptos.max({ i => i.velocidad() })
   
   method ciudad() = ciudad
 }
 
-object carrera {
-  method avisarALosVehiculos() {
-    inscripcion.inscriptos().forEach({ i => i.desgaste() })
-  }
-  
-  method ganador() = inscripcion.inscriptos().max({ i => i.velocidad() })
-}
